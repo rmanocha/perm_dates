@@ -1,5 +1,10 @@
-import requests
 from BeautifulSoup import BeautifulSoup
+from datetime import datetime
+import requests
+import sqlite3
+
+conn = sqlite3.connect("perm_dates.db")
+c = conn.cursor()
 
 data = requests.get("https://icert.doleta.gov/").text
 
@@ -12,7 +17,9 @@ fragment = soup.find(id="fragment-2")
 # elements and we care about the second one
 date_as_of = fragment.findAll("em")[1].text
 
-print "Date as of: %s" % date_as_of
+output = ""
+
+output += "Date as of: %s\n" % date_as_of
 
 processing_dates_table = fragment.findAll('table')[1].find('tbody')
 
@@ -23,6 +30,15 @@ for row in processing_dates_table.findAll('tr'):
         month, year = [x.text.replace("&nbsp;","").strip() for x in \
                                                             row.findAll('td')]
 
-        print "header: %s at %s/%s" % (header, month, year)
+        output += "header: %s at %s/%s\n" % (header, month, year)
     except ValueError:
         pass
+
+last_data = c.execute("select timestamp, data from perm_dates order by timestamp desc limit 1;").fetchone()
+
+c.execute("insert into perm_dates (timestamp, data) VALUES (?,?)", (datetime.now(), output))
+
+conn.commit()
+
+if last_data[-1] != output:
+    print output
