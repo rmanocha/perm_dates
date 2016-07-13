@@ -1,9 +1,12 @@
 from BeautifulSoup import BeautifulSoup
 from datetime import datetime
+import os
 import requests
 import sqlite3
 
-conn = sqlite3.connect("perm_dates.db")
+cur_dir = os.path.dirname(os.path.realpath(__file__))
+
+conn = sqlite3.connect("%s/perm_dates.db" % cur_dir)
 c = conn.cursor()
 
 data = requests.get("https://icert.doleta.gov/").text
